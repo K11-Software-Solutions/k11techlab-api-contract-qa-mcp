@@ -179,7 +179,9 @@ These apply to every format (with each format's names for inputs and outputs):
 | protobuf: field number changed, message replaced, streaming changed | yes |
 | protobuf: field renamed with the same number | yes (medium: wire-safe, breaks JSON and generated code) |
 
-The rules extend the K11 research on [cross-repository contract testing and change impact analysis](https://doi.org/10.18535/ijecs.v15i07.5599) (IJECS, 2026), whose reference system is [k11techlab-microservice-qa-system](https://github.com/K11-Software-Solutions/k11techlab-microservice-qa-system). This server adds `$ref`, nested and array-item rules and field-level consumer matching.
+The rules extend the K11 research on [cross-repository contract testing and change impact analysis](https://doi.org/10.18535/ijecs.v15i07.5599) (IJECS, 2026), whose reference system is [k11techlab-microservice-qa-system](https://github.com/K11-Software-Solutions/k11techlab-microservice-qa-system). This server adds `$ref`, nested and array-item rules, field-level consumer matching and five more contract formats.
+
+> **Attribution and licensing.** k11 API Contract QA is a new, independent implementation. It reuses the *design* of the reference system (its breaking-change taxonomy, severity levels and the rule that two or more broken consumers need a person's decision), not its code, and it has no dependency on that repository. The reference system is Apache-2.0 licensed; this project is MIT licensed. Both are by Kavita Jadhav / K11 Software Solutions LLC.
 
 ## How it compares
 
