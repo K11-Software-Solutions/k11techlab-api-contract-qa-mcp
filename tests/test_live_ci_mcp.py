@@ -66,7 +66,7 @@ def test_contract_ci_against_git_base(project, monkeypatch, tmp_path):
     assert outputs["verdict"] == "breaking" and outputs["consumers_affected"] == "3" and outputs["needs_human"] == "true"
     md = (project / ".qa-mcp/contract-report/contract-report.md").read_text("utf8")
     assert "Breaking for known consumers" in md and "billing-svc" in md and "Needs a person before merge" in md
-    assert "reads 'customer.email'" in md
+    assert "reads 'customer.email'" in md and "doesn't send the now-required 'channel'" in md
     assert cli(["contract-ci", "--spec", "api.yaml", "--base", "HEAD", "--fail-on", "never"]) == 0
     assert cli(["contract-ci", "--spec", "api.yaml", "--base-spec", "api.yaml"]) == 0  # identical → compatible
 
@@ -80,7 +80,7 @@ def test_mcp_tools_over_protocol(project, service, monkeypatch):
             info = await client.initialize()
             assert (info.serverInfo.name, info.serverInfo.version) == ("k11-api-contract-qa", __version__)
             tools = sorted(t.name for t in (await client.list_tools()).tools)
-            assert tools == ["assess_impact", "check_live_conformance", "diff_contracts", "discover_consumer_usage",
+            assert tools == ["assess_impact", "check_deployed_contract", "check_live_conformance", "diff_contracts", "discover_consumer_usage",
                              "generate_api_tests", "list_operations", "write_test"]
 
             def j(r):

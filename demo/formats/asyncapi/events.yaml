@@ -1,0 +1,42 @@
+asyncapi: 3.0.0
+info:
+  title: Order Events
+  version: 2.0.0
+channels:
+  orderCreated:
+    address: order.created
+    messages:
+      OrderCreated:
+        $ref: '#/components/messages/OrderCreated'
+  orderCancel:
+    address: order.cancel
+    messages:
+      CancelOrder:
+        $ref: '#/components/messages/CancelOrder'
+operations:
+  emitOrderCreated:
+    action: send
+    channel: { $ref: '#/channels/orderCreated' }
+  receiveCancel:
+    action: receive
+    channel: { $ref: '#/channels/orderCancel' }
+components:
+  messages:
+    OrderCreated:
+      name: OrderCreated
+      payload:
+        type: object
+        required: [orderId, total]
+        properties:
+          orderId: { type: string }
+          total: { type: string }
+          currency: { type: string }
+    CancelOrder:
+      name: CancelOrder
+      payload:
+        type: object
+        required: [orderId, requestedBy]
+        properties:
+          orderId: { type: string }
+          reason: { type: string }
+          requestedBy: { type: string }

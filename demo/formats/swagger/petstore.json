@@ -1,0 +1,44 @@
+{
+  "swagger": "2.0",
+  "info": { "title": "Pet Store", "version": "2.0.0" },
+  "basePath": "/api",
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "paths": {
+    "/pets/{id}": {
+      "get": {
+        "operationId": "getPet",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "type": "integer", "format": "int64" }],
+        "responses": { "200": { "description": "A pet", "schema": { "$ref": "#/definitions/Pet" } } }
+      }
+    },
+    "/pets": {
+      "post": {
+        "operationId": "addPet",
+        "parameters": [{ "name": "pet", "in": "body", "required": true, "schema": { "$ref": "#/definitions/NewPet" } }],
+        "responses": { "201": { "description": "Created", "schema": { "$ref": "#/definitions/Pet" } } }
+      },
+      "get": {
+        "operationId": "listPets",
+        "parameters": [{ "name": "limit", "in": "query", "type": "integer", "required": true }],
+        "responses": { "200": { "description": "Pets", "schema": { "type": "array", "items": { "$ref": "#/definitions/Pet" } } } }
+      }
+    }
+  },
+  "definitions": {
+    "NewPet": {
+      "type": "object",
+      "required": ["name", "species"],
+      "properties": { "name": { "type": "string" }, "tag": { "type": "string" }, "species": { "type": "string" } }
+    },
+    "Pet": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "tag": { "type": "string" }
+      }
+    }
+  }
+}

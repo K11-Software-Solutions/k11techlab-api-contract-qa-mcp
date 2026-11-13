@@ -102,6 +102,7 @@ class Operation:
     responses: dict = field(default_factory=dict)
     security: list | None = None
     deprecated: bool = False
+    meta: dict = field(default_factory=dict)  # format-specific: streaming, soap_action, ...
 
     @property
     def key(self) -> str:
@@ -112,19 +113,29 @@ class Operation:
         return f"{self.method.upper()} {norm_path(self.path)}"
 
 
+FORMATS = ("openapi", "swagger", "graphql", "protobuf", "asyncapi", "wsdl")
+
+
 @dataclass
 class Spec:
     raw: dict
     label: str
     operations: dict[str, Operation]  # norm_key -> Operation
+    format: str = "openapi"
+    strict_inputs: bool = False  # unknown/removed inputs are rejected (GraphQL, SOAP)
+    info: dict = field(default_factory=dict)
 
     @property
     def title(self) -> str:
-        return str(self.raw.get("info", {}).get("title", "API"))
+        return str(self.info.get("title") or self.raw.get("info", {}).get("title", "API"))
 
     @property
     def version(self) -> str:
-        return str(self.raw.get("info", {}).get("version", ""))
+        return str(self.info.get("version") or self.raw.get("info", {}).get("version", ""))
+
+    @property
+    def http(self) -> bool:
+        return self.format in ("openapi", "swagger")
 
     def find(self, endpoint: str) -> Operation | None:
         method, _, path = endpoint.strip().partition(" ")
@@ -132,8 +143,23 @@ class Spec:
 
 
 def load_spec(root: Path, source: str) -> Spec:
+    """Load any supported contract: OpenAPI 3.x, Swagger 2.0, GraphQL SDL or introspection JSON,
+    protobuf (.proto, with imports), AsyncAPI 2.x/3.x, or WSDL 1.1."""
+    from .formats import load_text
+
     text, label = read_spec_text(root, source)
-    return build_spec(parse_spec(text, label), label)
+
+    def related(name: str) -> str:
+        """Read a file next to the main one (protobuf imports), from disk or the same git ref."""
+        m = GIT_REF.match(source)
+        if m and not Path(root, source).exists() and not re.match(r"^[A-Za-z]:[\\/]", source):
+            ref, rel = m.groups()
+            base = rel.replace("\\", "/").rsplit("/", 1)[0] if "/" in rel.replace("\\", "/") else ""
+            return read_spec_text(root, f"{ref}:{base + '/' if base else ''}{name}")[0]
+        base = Path(source).parent
+        return read_spec_text(root, str(base / name))[0]
+
+    return load_text(text, label, related)
 
 
 def build_spec(raw: dict, label: str = "spec") -> Spec:
@@ -153,7 +179,17 @@ def build_spec(raw: dict, label: str = "spec") -> Spec:
                           request_body=op.get("requestBody"), responses=op.get("responses") or {},
                           security=op.get("security", global_security), deprecated=bool(op.get("deprecated")))
             ops[o.norm_key] = o
-    return Spec(raw, label, ops)
+    return Spec(raw, label, ops, "openapi")
+
+
+def make_op(method: str, path: str, request: dict | None = None, response: dict | None = None,
+            summary: str = "", meta: dict | None = None, deprecated: bool = False, request_required: bool = True) -> Operation:
+    """An operation for a non-HTTP format, using the same request/response shape as OpenAPI."""
+    rb = {"required": request_required, "content": {"application/json": {"schema": request}}} if request is not None else None
+    resp = {"200": {"description": "ok", "content": {"application/json": {"schema": response}}}} if response is not None \
+        else {"200": {"description": "ok"}}
+    return Operation(method=method, path=path, summary=summary, request_body=rb, responses=resp,
+                     meta=meta or {}, deprecated=deprecated)
 
 
 def json_schema_of(content: dict | None) -> dict | None:
@@ -162,6 +198,9 @@ def json_schema_of(content: dict | None) -> dict | None:
         return None
     for media, body in content.items():
         if "json" in media and isinstance(body, dict):
+            return body.get("schema") or {}
+    for media, body in content.items():  # form posts (Swagger formData) and XML bodies follow the same rules
+        if ("form" in media or "xml" in media) and isinstance(body, dict):
             return body.get("schema") or {}
     return None
 

@@ -1,0 +1,13 @@
+mutation Cancel($id: ID!) {
+  cancelOrder(id: $id, reason: "changed my mind") {
+    id
+    status
+  }
+}
+
+query Receipt($id: ID!) {
+  order(id: $id) {
+    id
+    customer { email }
+  }
+}

@@ -10,7 +10,7 @@ from typing import Any, Literal, Optional
 from mcp.server.fastmcp import FastMCP
 
 from . import __version__
-from . import conformance, consumers, report, testgen
+from . import conformance, consumers, drift, report, testgen
 from .diff import diff_specs, summary
 from .spec import SpecError, inside, load_spec
 
@@ -27,25 +27,30 @@ def create_server() -> FastMCP:
     mcp = FastMCP(
         "k11-api-contract-qa",
         instructions=(
-            "API contract testing for OpenAPI 3.x. Specs are project paths or git refs like origin/main:openapi.yaml. "
-            "Use diff_contracts / assess_impact before merging an API change, check_live_conformance against a "
-            "running service, and generate_api_tests to create contract tests. Results are deterministic. "
-            "Put tokens in headers as ${ENV:NAME}, never literally."
+            "API contract testing for OpenAPI 3.x, Swagger 2.0, GraphQL (SDL or introspection JSON), gRPC/protobuf "
+            "(.proto), AsyncAPI 2.x/3.x and SOAP/WSDL 1.1; the format is detected automatically. Specs are project paths "
+            "or git refs like origin/main:openapi.yaml. Operations are named 'GET /orders/{id}', 'QUERY order', "
+            "'RPC pkg.Service/Method', 'EMITS order.created' / 'RECEIVES order.cancel', or 'SOAP Port/Operation'. "
+            "Use diff_contracts / assess_impact before merging a change, check_deployed_contract to compare a running "
+            "service with the spec, check_live_conformance for HTTP responses, and generate_api_tests for REST tests. "
+            "Results are deterministic. Put tokens in headers as ${ENV:NAME}, never literally."
         ),
     )
 
     @mcp.tool(title="List operations")
     def list_operations(spec: str) -> dict:
-        """List the endpoints in an OpenAPI spec (path or <git-ref>:<path>)."""
+        """List the operations in a contract (OpenAPI, Swagger, GraphQL, .proto, AsyncAPI or WSDL; a project path or
+        <git-ref>:<path>). Also tells you the detected format."""
         s = load_spec(project_root(), spec)
-        return {"api": s.title, "version": s.version, "operations": [
+        return {"api": s.title, "version": s.version, "format": s.format, "operations": [
             {"endpoint": o.key, "summary": o.summary, "operationId": o.operation_id, "deprecated": o.deprecated}
             for o in sorted(s.operations.values(), key=lambda o: (o.path, o.method))]}
 
     @mcp.tool(title="Diff contracts")
     def diff_contracts(base_spec: str, head_spec: str, breaking_only: bool = False) -> dict:
-        """Compare two OpenAPI specs and classify every change as breaking or compatible, with the rule,
-        field path, before/after and severity. Example: base_spec='origin/main:openapi.yaml', head_spec='openapi.yaml'."""
+        """Compare two versions of a contract (any supported format) and classify every change as breaking or
+        compatible, with the rule, field path, before/after and severity.
+        Example: base_spec='origin/main:openapi.yaml', head_spec='openapi.yaml'."""
         root = project_root()
         changes = diff_specs(load_spec(root, base_spec), load_spec(root, head_spec))
         shown = [c for c in changes if c.breaking] if breaking_only else changes
@@ -71,8 +76,9 @@ def create_server() -> FastMCP:
 
     @mcp.tool(title="Discover consumer usage")
     def discover_consumer_usage(consumer_dir: str, spec: str, consumer_name: Optional[str] = None) -> dict:
-        """Scan a consumer service's source code (inside the project) for calls to the provider's endpoints, with
-        file and line as evidence, and draft its consumers.yaml entry."""
+        """Scan a consumer service's source code (inside the project) for calls to the provider, with file and line
+        as evidence, and draft its consumers.yaml entry. HTTP paths, GraphQL query documents (exact fields read),
+        gRPC stub calls, SOAP client calls, and AsyncAPI topic names."""
         root = project_root()
         d = inside(root, consumer_dir)
         if not d.is_dir():
@@ -91,8 +97,21 @@ def create_server() -> FastMCP:
         content type and the JSON body against the spec's response schema. Header values may use ${ENV:NAME}."""
         if not re.match(r"^https?://", base_url):
             raise ValueError("base_url must start with http:// or https://")
-        res = conformance.check(load_spec(project_root(), spec), base_url, endpoint, path_params, query, body, headers)
-        return res
+        s = load_spec(project_root(), spec)
+        if not s.http:
+            raise ValueError(f"check_live_conformance is for OpenAPI/Swagger HTTP APIs; this is {s.format}. "
+                             "Use check_deployed_contract to compare the running service with the spec.")
+        return conformance.check(s, base_url, endpoint, path_params, query, body, headers)
+
+    @mcp.tool(title="Check deployed contract")
+    def check_deployed_contract(spec: str, url: str, headers: Optional[dict] = None) -> dict:
+        """Compare what a running service publishes with the spec file: GraphQL introspection (url = the GraphQL
+        endpoint), a WSDL URL (e.g. http://host/orders?wsdl), or a published OpenAPI/Swagger/AsyncAPI document
+        (e.g. http://host/v3/api-docs). Verdict: matches | drift | incompatible. gRPC is not supported (needs
+        reflection). Header values may use ${ENV:NAME}."""
+        if not re.match(r"^https?://", url):
+            raise ValueError("url must start with http:// or https://")
+        return drift.check(load_spec(project_root(), spec), url, headers)
 
     @mcp.tool(title="Generate API tests")
     def generate_api_tests(spec: str, endpoints: Optional[list[str]] = None,
@@ -100,6 +119,8 @@ def create_server() -> FastMCP:
         """Generate contract tests (status + JSON schema) for some or all endpoints: pytest + httpx, or Java REST
         Assured (JUnit 5). Returns the files; write them with write_test."""
         s = load_spec(project_root(), spec)
+        if not s.http:
+            raise ValueError(f"Test generation supports OpenAPI and Swagger HTTP APIs; this is {s.format}.")
         ops = [s.find(e) for e in endpoints] if endpoints else sorted(s.operations.values(), key=lambda o: (o.path, o.method))
         missing = [e for e, o in zip(endpoints or [], ops) if o is None]
         if missing:

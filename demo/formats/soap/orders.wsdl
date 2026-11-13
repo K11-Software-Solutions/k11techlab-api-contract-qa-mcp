@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions name="OrderService" targetNamespace="http://acme.example/orders"
+    xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:tns="http://acme.example/orders" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xsd:schema targetNamespace="http://acme.example/orders" elementFormDefault="qualified">
+      <xsd:simpleType name="Status">
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="PENDING"/><xsd:enumeration value="PAID"/><xsd:enumeration value="SHIPPED"/><xsd:enumeration value="REFUNDED"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:complexType name="Order">
+        <xsd:sequence>
+          <xsd:element name="Id" type="xsd:string"/>
+          <xsd:element name="Status" type="tns:Status"/>
+          <xsd:element name="Total" type="xsd:string"/>
+          <xsd:element name="Item" type="tns:Item" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="Item">
+        <xsd:sequence>
+          <xsd:element name="Sku" type="xsd:string"/>
+          <xsd:element name="Qty" type="xsd:int"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:element name="GetOrderRequest">
+        <xsd:complexType><xsd:sequence><xsd:element name="OrderId" type="xsd:string"/></xsd:sequence></xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetOrderResponse">
+        <xsd:complexType><xsd:sequence><xsd:element name="Order" type="tns:Order"/></xsd:sequence></xsd:complexType>
+      </xsd:element>
+      <xsd:element name="CancelOrderRequest">
+        <xsd:complexType><xsd:sequence>
+          <xsd:element name="OrderId" type="xsd:string"/>
+          <xsd:element name="Reason" type="xsd:string"/>
+        </xsd:sequence></xsd:complexType>
+      </xsd:element>
+      <xsd:element name="CancelOrderResponse">
+        <xsd:complexType><xsd:sequence><xsd:element name="Cancelled" type="xsd:boolean"/></xsd:sequence></xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </types>
+  <message name="GetOrderIn"><part name="parameters" element="tns:GetOrderRequest"/></message>
+  <message name="GetOrderOut"><part name="parameters" element="tns:GetOrderResponse"/></message>
+  <message name="CancelOrderIn"><part name="parameters" element="tns:CancelOrderRequest"/></message>
+  <message name="CancelOrderOut"><part name="parameters" element="tns:CancelOrderResponse"/></message>
+  <portType name="OrderPort">
+    <operation name="GetOrder"><input message="tns:GetOrderIn"/><output message="tns:GetOrderOut"/></operation>
+    <operation name="CancelOrder"><input message="tns:CancelOrderIn"/><output message="tns:CancelOrderOut"/></operation>
+  </portType>
+  <binding name="OrderBinding" type="tns:OrderPort">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="GetOrder"><soap:operation soapAction="http://acme.example/orders/GetOrder"/></operation>
+    <operation name="CancelOrder"><soap:operation soapAction="urn:CancelOrderV2"/></operation>
+  </binding>
+  <service name="OrderService">
+    <port name="OrderPort" binding="tns:OrderBinding"><soap:address location="http://localhost:8088/orders"/></port>
+  </service>
+</definitions>

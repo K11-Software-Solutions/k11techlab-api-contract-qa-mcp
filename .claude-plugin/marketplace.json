@@ -8,7 +8,7 @@
     {
       "name": "api-contract-qa",
       "source": "./",
-      "description": "Consumer-aware API contract testing: which services a change breaks and why, live conformance, contract tests."
+      "description": "Consumer-aware contract testing for REST, GraphQL, gRPC, AsyncAPI and SOAP: which services a change breaks and why."
     }
   ]
 }

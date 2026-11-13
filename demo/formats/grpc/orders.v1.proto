@@ -1,0 +1,45 @@
+syntax = "proto3";
+package shop.v1;
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+// Order service used by billing and notifications.
+service OrderService {
+  rpc GetOrder(GetOrderRequest) returns (Order);
+  rpc ListOrders(ListOrdersRequest) returns (stream Order);
+  rpc CancelOrder(CancelOrderRequest) returns (Order);
+}
+
+message GetOrderRequest { string id = 1; }
+
+message ListOrdersRequest {
+  Status status = 1;
+  int32 page_size = 2;
+}
+
+message CancelOrderRequest {
+  string id = 1;
+  string reason = 2;
+}
+
+enum Status {
+  STATUS_UNSPECIFIED = 0;
+  PENDING = 1;
+  PAID = 2;
+  SHIPPED = 3;
+}
+
+message Order {
+  string id = 1;
+  Status status = 2;
+  Money total = 3;
+  string customer_email = 4;
+  repeated Item items = 5;
+  google.protobuf.Timestamp created_at = 6;
+
+  message Item {
+    string sku = 1;
+    int32 qty = 2;
+  }
+}

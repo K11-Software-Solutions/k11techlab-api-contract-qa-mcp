@@ -1,0 +1,33 @@
+asyncapi: 2.6.0
+info:
+  title: Order Events
+  version: 1.0.0
+channels:
+  order.created:
+    subscribe:
+      summary: Emitted when an order is placed
+      message:
+        $ref: '#/components/messages/OrderCreated'
+  order.cancel:
+    publish:
+      summary: Commands to cancel an order
+      message:
+        name: CancelOrder
+        payload:
+          type: object
+          required: [orderId]
+          properties:
+            orderId: { type: string }
+            reason: { type: string }
+components:
+  messages:
+    OrderCreated:
+      name: OrderCreated
+      payload:
+        type: object
+        required: [orderId, total, customerEmail]
+        properties:
+          orderId: { type: string }
+          total: { type: number }
+          currency: { type: string }
+          customerEmail: { type: string, format: email }

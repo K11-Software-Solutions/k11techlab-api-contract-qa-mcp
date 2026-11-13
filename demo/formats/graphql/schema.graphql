@@ -1,0 +1,34 @@
+# title: Orders GraphQL API
+type Query {
+  order(id: ID!): Order
+  orders(status: OrderStatus, first: Int = 20): [Order!]!
+}
+
+type Mutation {
+  createOrder(input: CreateOrderInput!): Order!
+  cancelOrder(id: ID!): Order
+}
+
+enum OrderStatus { PENDING PAID SHIPPED REFUNDED }
+
+type Order {
+  id: ID!
+  status: OrderStatus!
+  total: String!
+  currency: String!
+  customer: Customer
+  items: [LineItem!]!
+}
+
+type Customer { id: ID! email: String name: String }
+
+type LineItem { sku: String! qty: Int! }
+
+input CreateOrderInput {
+  customerId: ID!
+  items: [LineItemInput!]!
+  note: String
+  channel: String!
+}
+
+input LineItemInput { sku: String! qty: Int! }
