@@ -1,0 +1,30 @@
+# Who calls the Order Service, and which fields they depend on.
+consumers:
+  - name: billing-svc
+    repo: K11-Software-Solutions/k11-payment-service
+    owner: "@team-billing"
+    criticality: critical
+    uses:
+      - endpoint: GET /orders/{id}
+        reads: [id, total, currency]
+  - name: notification-svc
+    repo: K11-Software-Solutions/k11-notification-svc
+    owner: "@team-notify"
+    criticality: high
+    uses:
+      - endpoint: GET /orders/{id}
+        reads: [id, status, customer.email]
+  - name: checkout-web
+    owner: "@team-web"
+    criticality: high
+    uses:
+      - endpoint: POST /orders
+        sends: [customerId, items]
+        reads: [id]
+      - endpoint: GET /orders/{id}/tracking
+  - name: analytics-svc
+    owner: "@team-data"
+    criticality: low
+    uses:
+      - endpoint: GET /orders
+        reads: [id, status]

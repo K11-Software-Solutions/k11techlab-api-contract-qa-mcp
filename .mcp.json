@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "api-contract-qa": {
+      "command": "uvx",
+      "args": [
+        "k11-api-contract-qa-mcp"
+      ]
+    }
+  }
+}

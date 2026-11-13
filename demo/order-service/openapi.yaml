@@ -1,0 +1,116 @@
+openapi: 3.0.3
+info:
+  title: Order Service
+  version: 2.0.0
+security:
+  - bearerAuth: []
+paths:
+  /orders:
+    get:
+      operationId: listOrders
+      summary: List orders
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/OrderStatus' }
+      responses:
+        '200':
+          description: Orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/OrderSummary' }
+    post:
+      operationId: createOrder
+      summary: Create an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [customerId, items, channel]
+              properties:
+                customerId: { type: string }
+                items:
+                  type: array
+                  items: { $ref: '#/components/schemas/LineItem' }
+                channel: { type: string, enum: [web, mobile, pos] }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+  /orders/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getOrder
+      summary: Get one order
+      responses:
+        '200':
+          description: The order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '404':
+          description: Not found
+  /orders/{id}/tracking:
+    get:
+      operationId: getTracking
+      summary: Shipment tracking for an order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Tracking
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  carrier: { type: string }
+                  trackingNumber: { type: string }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer }
+  schemas:
+    OrderStatus:
+      type: string
+      enum: [pending, paid, shipped, refunded]
+    LineItem:
+      type: object
+      required: [sku, qty]
+      properties:
+        sku: { type: string }
+        qty: { type: integer }
+        price: { type: number }
+    OrderSummary:
+      type: object
+      required: [id, status]
+      properties:
+        id: { type: string }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+    Order:
+      type: object
+      required: [id, status, total, currency]
+      properties:
+        id: { type: string }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        total: { type: string, description: 'Decimal amount as a string, e.g. "42.50"' }
+        currency: { type: string }
+        customer:
+          type: object
+          properties:
+            id: { type: string }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/LineItem' }

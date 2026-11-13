@@ -1,0 +1,30 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.K11-Software-Solutions/api-contract-qa",
+  "title": "k11 API Contract QA",
+  "description": "Which services an OpenAPI change breaks and why: consumer-aware diffs, live conformance, tests.",
+  "websiteUrl": "https://github.com/K11-Software-Solutions/k11techlab-api-contract-qa-mcp",
+  "repository": {
+    "url": "https://github.com/K11-Software-Solutions/k11techlab-api-contract-qa-mcp",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "k11-api-contract-qa-mcp",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "QA_MCP_ROOT",
+          "description": "Folder of the service or repo with the spec (default: current directory)",
+          "isRequired": false,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}

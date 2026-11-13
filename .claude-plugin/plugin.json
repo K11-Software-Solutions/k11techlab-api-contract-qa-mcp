@@ -1,0 +1,21 @@
+{
+  "name": "api-contract-qa",
+  "version": "0.1.0",
+  "description": "Know which services an API change breaks before merge: consumer-aware OpenAPI breaking-change detection, live conformance checks and contract test generation, with an audit trail.",
+  "author": {
+    "name": "Kavita A. Jadhav",
+    "url": "https://k11softwaresolutions.com"
+  },
+  "homepage": "https://github.com/K11-Software-Solutions/k11techlab-api-contract-qa-mcp",
+  "repository": "https://github.com/K11-Software-Solutions/k11techlab-api-contract-qa-mcp",
+  "license": "MIT",
+  "keywords": [
+    "openapi",
+    "contract-testing",
+    "api-testing",
+    "breaking-changes",
+    "microservices",
+    "qa",
+    "mcp"
+  ]
+}

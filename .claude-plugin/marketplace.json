@@ -1,0 +1,14 @@
+{
+  "name": "k11-api-contract-qa",
+  "owner": {
+    "name": "K11 Software Solutions",
+    "url": "https://k11softwaresolutions.com"
+  },
+  "plugins": [
+    {
+      "name": "api-contract-qa",
+      "source": "./",
+      "description": "Consumer-aware API contract testing: which services a change breaks and why, live conformance, contract tests."
+    }
+  ]
+}

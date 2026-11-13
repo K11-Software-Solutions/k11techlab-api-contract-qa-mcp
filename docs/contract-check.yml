@@ -1,0 +1,42 @@
+# Copy to .github/workflows/contract-check.yml in the repository that owns the API spec.
+#
+# On every pull request that changes the spec, compares it with the base branch,
+# works out which known consumers (.qa-mcp/consumers.yaml) break and why, and posts
+# the report as a pull-request comment. Fails the check when a known consumer breaks.
+name: API contract check
+
+on:
+  pull_request:
+    paths: ["openapi.yaml", ".qa-mcp/consumers.yaml"]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the base branch is needed for the comparison
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install k11-api-contract-qa-mcp
+
+      - name: Check the API change
+        id: contract
+        run: k11-api-contract-qa-mcp contract-ci --spec openapi.yaml --base "origin/${{ github.base_ref }}" --fail-on never
+
+      - name: Comment on the pull request
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: api-contract-check
+          path: ${{ steps.contract.outputs.report }}
+
+      - name: Fail if a known consumer breaks
+        if: steps.contract.outputs.verdict == 'breaking'
+        run: |
+          echo "This change breaks ${{ steps.contract.outputs.consumers_affected }} known consumer(s). See the PR comment."
+          exit 1

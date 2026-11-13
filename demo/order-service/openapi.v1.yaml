@@ -1,0 +1,104 @@
+openapi: 3.0.3
+info:
+  title: Order Service
+  version: 1.4.0
+security:
+  - bearerAuth: []
+paths:
+  /orders:
+    get:
+      operationId: listOrders
+      summary: List orders
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/OrderStatus' }
+      responses:
+        '200':
+          description: Orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/OrderSummary' }
+    post:
+      operationId: createOrder
+      summary: Create an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [customerId, items]
+              properties:
+                customerId: { type: string }
+                items:
+                  type: array
+                  items: { $ref: '#/components/schemas/LineItem' }
+                note: { type: string }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+  /orders/{orderId}:
+    parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getOrder
+      summary: Get one order
+      responses:
+        '200':
+          description: The order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '404':
+          description: Not found
+    delete:
+      operationId: cancelOrder
+      summary: Cancel an order
+      responses:
+        '204':
+          description: Cancelled
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer }
+  schemas:
+    OrderStatus:
+      type: string
+      enum: [pending, paid, shipped]
+    LineItem:
+      type: object
+      required: [sku, qty]
+      properties:
+        sku: { type: string }
+        qty: { type: integer }
+        price: { type: number }
+    OrderSummary:
+      type: object
+      required: [id, status]
+      properties:
+        id: { type: string }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+    Order:
+      type: object
+      required: [id, status, total, currency]
+      properties:
+        id: { type: string }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        total: { type: number }
+        currency: { type: string }
+        customer:
+          type: object
+          properties:
+            id: { type: string }
+            email: { type: string, format: email }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/LineItem' }
