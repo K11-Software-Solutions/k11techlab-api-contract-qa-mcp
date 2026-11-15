@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+type: software
+title: "k11 API Contract QA MCP Server"
+abstract: "MCP server and Claude Code plugin for API contract testing across OpenAPI, Swagger, GraphQL, gRPC, AsyncAPI and SOAP: finds breaking changes before merge and which consumers they break, down to the fields each one reads or sends, checks deployed services for drift, generates contract tests and posts a verdict on pull requests."
+authors:
+  - family-names: "Jadhav"
+    given-names: "Kavita"
+    orcid: "https://orcid.org/0009-0009-8507-4976"
+    affiliation: "K11 Software Solutions"
+repository-code: "https://github.com/K11-Software-Solutions/k11techlab-api-contract-qa-mcp"
+url: "https://github.com/K11-Software-Solutions/k11techlab-api-contract-qa-mcp"
+license: MIT
+keywords:
+  - "contract testing"
+  - "API testing"
+  - "breaking changes"
+  - "OpenAPI"
+  - "GraphQL"
+  - "gRPC"
+  - "microservices"
+  - "model context protocol"
+references:
+  - type: article
+    title: "Autonomous CI/CD Quality Assurance Using LangGraph Multi-Agent Orchestration and Risk-Proportionate Human-in-the-Loop Control"
+    authors:
+      - family-names: "Jadhav"
+        given-names: "Kavita"
+        orcid: "https://orcid.org/0009-0009-8507-4976"
+    journal: "International Journal of Engineering and Computer Science"
+    year: 2026
+    doi: "10.18535/ijecs/v15i06.5563"
