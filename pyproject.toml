@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "k11-api-contract-qa-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "MCP server and Claude Code plugin for API contract testing across OpenAPI, Swagger, GraphQL, gRPC/protobuf, AsyncAPI and SOAP/WSDL: consumer-aware breaking-change detection, deployed-contract drift and conformance checks, with an audit trail."
 readme = "README.md"
 license = "MIT"

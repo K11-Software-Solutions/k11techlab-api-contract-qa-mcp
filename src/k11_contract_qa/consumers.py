@@ -65,11 +65,16 @@ def _same_endpoint(a: str, b: str) -> bool:
     return am.upper() == bm.upper() and norm_path(ap.strip()) == norm_path(bp.strip())
 
 
+def _field_path(field: str) -> str:
+    """'[].createdAt' (an item of a top-level list), 'parts[].w' and 'createdAt' all as plain dotted paths."""
+    return ".".join(p for p in field.replace("[]", "").split(".") if p)
+
+
 def _field_hit(change_field: str, fields: list[str] | None) -> bool:
     if fields is None:
         return True  # consumer didn't say which fields: assume all
-    cf = change_field.replace("[]", "")
-    return any(cf == f or cf.startswith(f + ".") or f.startswith(cf + ".") for f in (x.replace("[]", "") for x in fields))
+    cf = _field_path(change_field)
+    return any(cf == f or cf.startswith(f + ".") or f.startswith(cf + ".") for f in (_field_path(x) for x in fields))
 
 
 def affects(change: Change, use: Use) -> tuple[bool, str]:

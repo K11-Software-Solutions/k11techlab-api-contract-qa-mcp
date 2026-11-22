@@ -1,6 +1,6 @@
 {
   "name": "api-contract-qa",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Know which services an API change breaks before merge, for OpenAPI, Swagger, GraphQL, gRPC/protobuf, AsyncAPI and SOAP/WSDL: consumer-aware breaking-change detection, deployed-contract drift, conformance checks and contract tests, with an audit trail.",
   "author": {
     "name": "Kavita A. Jadhav",

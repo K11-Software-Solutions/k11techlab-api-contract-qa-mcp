@@ -115,3 +115,21 @@ def test_discovery_finds_real_calls_only(project):
         "checkout-web": ["GET /orders/{id}/tracking", "POST /orders"],
         "analytics-svc": ["GET /orders"],
     }
+
+
+def test_fields_of_a_top_level_list_match_consumers():
+    """GET /things returns a list: a removed item field is '[].size', and a consumer that reads 'size' is affected."""
+    base = copy.deepcopy(BASE)
+    base["paths"]["/things"] = {"get": {"responses": {"200": {"description": "ok", "content": {"application/json": {
+        "schema": {"type": "array", "items": {"$ref": "#/components/schemas/Thing"}}}}}}}}
+    head = copy.deepcopy(base)
+    head["components"]["schemas"]["Thing"]["properties"].pop("size")
+    head["components"]["schemas"]["Thing"]["required"] = ["id"]
+    changes = [c for c in diff_specs(build_spec(base), build_spec(head)) if c.endpoint == "GET /things"]
+    assert [c.field for c in changes] == ["[].size"]
+    for reads in (["size"], ["[].size"], ["id", "size"]):
+        use = consumers.Use("GET /things", reads, None)
+        assert consumers.affects(changes[0], use)[0], reads
+    assert not consumers.affects(changes[0], consumers.Use("GET /things", ["id", "parts"], None))[0]
+    nested = consumers.Use("GET /things/{thingId}", ["parts.w"], None)
+    assert consumers._field_hit("parts[].w", nested.reads) and not consumers._field_hit("parts[].h", nested.reads)
