@@ -71,6 +71,8 @@ Specs are files in the project or git refs: `origin/main:openapi.yaml`, `origin/
 
 ## Tell it who your consumers are
 
+> All K11 QA tools keep their settings, baselines and reports in `.qa-mcp/`. [What each file is for, and what to commit](https://github.com/K11-Software-Solutions/k11techlab-release-gate-mcp/blob/main/docs/qa-mcp-folder.md).
+
 `.qa-mcp/consumers.yaml`:
 
 ```yaml
